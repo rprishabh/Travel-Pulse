@@ -1,0 +1,454 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// TravelPulse India — Prisma Schema
+// Production-Ready PostgreSQL Configuration
+// Optimized for high-read / low-write replication (skills.md §1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ENUMS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  FLAGGED
+}
+
+enum ContentTone {
+  MEMES_FUNNY
+  PROFESSIONAL_BUDDY
+  FORMAL_RESPECTFUL
+  CASUAL_ENGAGING
+}
+
+enum TravelSegment {
+  INBOUND
+  OUTBOUND
+  DOMESTIC
+  ENTERPRISE
+  GLOBAL
+}
+
+enum AdvisoryLevel {
+  LEVEL_1_EXERCISE_NORMAL
+  LEVEL_2_EXERCISE_INCREASED
+  LEVEL_3_RECONSIDER_TRAVEL
+  LEVEL_4_DO_NOT_TRAVEL
+}
+
+enum VisaType {
+  TOURIST
+  BUSINESS
+  MEDICAL
+  CONFERENCE
+  E_VISA
+  VISA_ON_ARRIVAL
+  TRANSIT
+  STUDENT
+  EMPLOYMENT
+  JOURNALIST
+  DIPLOMATIC
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+  EMERGENCY
+}
+
+enum AlertCategory {
+  WEATHER
+  HEALTH
+  SECURITY
+  TRANSPORT
+  POLICY
+  NATURAL_DISASTER
+  STRIKE
+  PANDEMIC
+}
+
+enum GovernmentUpdateType {
+  POLICY
+  SCHEME
+  INFRASTRUCTURE
+  REGULATION
+  BUDGET
+  BILATERAL
+  PROMOTION
+}
+
+enum FactCategory {
+  HERITAGE
+  WILDLIFE
+  CULTURE
+  CUISINE
+  FESTIVAL
+  GEOGRAPHY
+  HISTORY
+  ARCHITECTURE
+  SPIRITUAL
+  ADVENTURE
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CORE CONTENT MODELS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Aggregated travel news articles from 20+ RSS / scraper sources.
+/// Indexed for fast category & segment filtering, date-sorted pagination,
+/// and full-text headline/summary search.
+model Article {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  summary         String        @db.Text
+  content         String        @db.Text
+  coverImageUrl   String?
+  sourceUrl       String        @unique
+  sourceName      String
+  sourceLogoUrl   String?
+  author          String?
+  publishedAt     DateTime
+  fetchedAt       DateTime      @default(now())
+  status          ArticleStatus @default(DRAFT)
+  tone            ContentTone   @default(PROFESSIONAL_BUDDY)
+  segment         TravelSegment @default(DOMESTIC)
+  readTimeMinutes Int           @default(3)
+  viewCount       Int           @default(0)
+  shareCount      Int           @default(0)
+  isFeatured      Boolean       @default(false)
+  isPinned        Boolean       @default(false)
+  seoTitle        String?
+  seoDescription  String?       @db.VarChar(320)
+  seoKeywords     String[]
+  aiCategoryScore Float?
+  aiSentiment     Float?
+
+  // Relations
+  newsSourceId String?
+  newsSource   NewsSource? @relation(fields: [newsSourceId], references: [id], onDelete: SetNull)
+  categoryId   String?
+  category     Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags         Tag[]       @relation("ArticleTags")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@index([segment, status, publishedAt(sort: Desc)])
+  @@index([categoryId, status])
+  @@index([isFeatured, status])
+  @@index([sourceName])
+  @@index([fetchedAt(sort: Desc)])
+  @@map("articles")
+}
+
+/// Curated RSS / scraper news sources with health-check metadata.
+model NewsSource {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  slug          String   @unique
+  websiteUrl    String
+  rssUrl        String?
+  scraperType   String   @default("rss")
+  logoUrl       String?
+  isActive      Boolean  @default(true)
+  trustScore    Float    @default(0.8)
+  fetchInterval Int      @default(3600)
+  lastFetchedAt DateTime?
+  lastErrorAt   DateTime?
+  lastError     String?
+  articleCount  Int      @default(0)
+
+  articles Article[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@map("news_sources")
+}
+
+/// Hierarchical content categories for articles and SEO structures.
+model Category {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  description String?
+  iconName    String?
+  colorHex    String? @default("#6366f1")
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
+
+  parentId String?
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryHierarchy")
+
+  articles Article[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@map("categories")
+}
+
+/// Flexible tagging system for cross-cutting content labels.
+model Tag {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  articles Article[] @relation("ArticleTags")
+
+  createdAt DateTime @default(now())
+
+  @@map("tags")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VISA & TRAVEL ADVISORY MODELS
+// knowledge.md: Inbound — complex multi-city visa documentation
+// knowledge.md: Outbound — live visa processing times, VoA changes
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Live visa requirement updates for both inbound (into India) and
+/// outbound (Indian passport holders) travel segments.
+model VisaUpdate {
+  id                  String        @id @default(cuid())
+  slug                String        @unique
+  countryName         String
+  countryCode         String        @db.VarChar(3)
+  flagEmoji           String?       @db.VarChar(4)
+  segment             TravelSegment
+  visaType            VisaType
+  isVisaRequired      Boolean       @default(true)
+  isVisaOnArrival     Boolean       @default(false)
+  isEVisaAvailable    Boolean       @default(false)
+  processingTimeDays  Int?
+  validityDays        Int?
+  maxStayDays         Int?
+  multipleEntry       Boolean       @default(false)
+  fee                 Float?
+  feeCurrency         String?       @db.VarChar(3)
+  applicationUrl      String?
+  requirements        String[]
+  documentsRequired   String[]
+  exemptions          String?       @db.Text
+  notes               String?       @db.Text
+  sourceUrl           String?
+  lastVerifiedAt      DateTime?
+  effectiveFrom       DateTime?
+  effectiveUntil      DateTime?
+  isActive            Boolean       @default(true)
+  passportPowerRank   Int?
+  henleyIndex         Float?
+  arrivalCardRequired Boolean       @default(false)
+  yellowFeverRequired Boolean       @default(false)
+  covidProtocol       String?       @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([countryCode, segment, visaType])
+  @@index([segment, isActive])
+  @@index([countryCode])
+  @@index([isVisaOnArrival, segment])
+  @@index([isEVisaAvailable, segment])
+  @@map("visa_updates")
+}
+
+/// Government-level travel advisories with severity classification.
+/// knowledge.md: Inbound — health/safety advisories
+/// knowledge.md: Outbound — changing geopolitical travel updates
+model TravelAdvisory {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  title            String
+  countryName      String
+  countryCode      String        @db.VarChar(3)
+  segment          TravelSegment
+  advisoryLevel    AdvisoryLevel
+  summary          String        @db.Text
+  details          String        @db.Text
+  affectedRegions  String[]
+  issuedBy         String
+  issuedAt         DateTime
+  effectiveFrom    DateTime
+  effectiveUntil   DateTime?
+  sourceUrl        String?
+  isActive         Boolean       @default(true)
+  healthRisks      String[]
+  securityRisks    String[]
+  entryRestrictions String?      @db.Text
+  exitRestrictions  String?      @db.Text
+  localLaws         String?      @db.Text
+  emergencyContacts Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([segment, advisoryLevel, isActive])
+  @@index([countryCode, isActive])
+  @@index([issuedAt(sort: Desc)])
+  @@map("travel_advisories")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GOVERNMENT & POLICY MODELS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Indian government tourism initiatives, policy changes, and schemes.
+model GovernmentUpdate {
+  id               String               @id @default(cuid())
+  slug             String               @unique
+  title            String
+  summary          String               @db.Text
+  content          String               @db.Text
+  updateType       GovernmentUpdateType
+  ministry         String?
+  policyNumber     String?
+  effectiveFrom    DateTime?
+  effectiveUntil   DateTime?
+  impactedSegments TravelSegment[]
+  impactedStates   String[]
+  budgetAllocation Float?
+  budgetCurrency   String?              @db.VarChar(3)
+  sourceUrl        String?
+  documentUrl      String?
+  isActive         Boolean              @default(true)
+  isMajor          Boolean              @default(false)
+  publishedAt      DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([updateType, isActive])
+  @@index([publishedAt(sort: Desc)])
+  @@index([isMajor, isActive])
+  @@map("government_updates")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DAILY FACTS & ENGAGEMENT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Rotating daily Indian tourism facts for user engagement and SEO.
+/// Covers heritage, wildlife, culture, cuisine, festivals, geography,
+/// history, architecture, spiritual, and adventure categories.
+model DailyFact {
+  id           String       @id @default(cuid())
+  factDate     DateTime     @unique @db.Date
+  title        String
+  fact         String       @db.Text
+  detailedFact String?      @db.Text
+  category     FactCategory
+  region       String?
+  state        String?
+  imageUrl     String?
+  sourceUrl    String?
+  funEmoji     String?      @db.VarChar(4)
+  tone         ContentTone  @default(CASUAL_ENGAGING)
+  isPublished  Boolean      @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([isPublished, factDate(sort: Desc)])
+  @@map("daily_facts")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REAL-TIME ALERTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Live travel alerts for weather, health, security, transport disruptions,
+/// and policy changes. Supports geo-targeting and auto-expiry.
+model TravelAlert {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  message         String        @db.Text
+  severity        AlertSeverity
+  alertCategory   AlertCategory
+  segment         TravelSegment?
+  affectedCountry String?
+  countryCode     String?       @db.VarChar(3)
+  affectedRegions String[]
+  affectedCities  String[]
+  sourceUrl       String?
+  issuedBy        String?
+  issuedAt        DateTime      @default(now())
+  expiresAt       DateTime?
+  isActive        Boolean       @default(true)
+  isResolved      Boolean       @default(false)
+  resolvedAt      DateTime?
+  resolutionNote  String?       @db.Text
+  latitude        Float?
+  longitude       Float?
+  radiusKm        Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([severity, isActive])
+  @@index([alertCategory, isActive])
+  @@index([isActive, issuedAt(sort: Desc)])
+  @@index([countryCode, isActive])
+  @@index([expiresAt])
+  @@map("travel_alerts")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ANALYTICS & OPERATIONS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Cron job execution log for RSS fetch cycles, AI categorization runs,
+/// and data pipeline health monitoring.
+/// skills.md §1: Deep error boundaries and data fallback loops for
+/// all background workers and fetch cron tasks.
+model CronJobLog {
+  id          String   @id @default(cuid())
+  jobName     String
+  status      String
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  duration    Int?
+  itemsProcessed Int   @default(0)
+  itemsFailed    Int   @default(0)
+  errorMessage   String? @db.Text
+  errorStack     String? @db.Text
+  metadata       Json?
+
+  @@index([jobName, startedAt(sort: Desc)])
+  @@index([status])
+  @@map("cron_job_logs")
+}
+
+/// Exchange rate snapshots for currency conversion widgets.
+/// knowledge.md: Inbound — live exchange calculations
+/// knowledge.md: Outbound — currency card volatility
+model ExchangeRate {
+  id           String   @id @default(cuid())
+  baseCurrency String   @db.VarChar(3)
+  targetCurrency String @db.VarChar(3)
+  rate         Float
+  inverseRate  Float
+  source       String   @default("exchangerate-api")
+  fetchedAt    DateTime @default(now())
+
+  @@unique([baseCurrency, targetCurrency, fetchedAt])
+  @@index([baseCurrency, targetCurrency])
+  @@map("exchange_rates")
+}

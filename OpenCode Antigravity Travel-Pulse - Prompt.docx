@@ -1,0 +1,18 @@
+You are building "TravelPulse India" - a comprehensive travel news aggregation website for Indian travelers. This is a production-ready application that will be deployed to Vercel and used by thousands of travelers and tourism professionals.
+
+## PROJECT OVERVIEW
+Build a Next.js 14 website that automatically aggregates travel news from 20+ sources, displays visa information, travel advisories, government initiatives, and daily tourism facts. The website must be mobile-responsive, SEO-optimized, and include dark mode support.
+
+## TECH STACK REQUIREMENTS
+- Frontend: Next.js 14 (App Router), React 19, TypeScript, Tailwind CSS 4, shadcn/ui
+- Backend: Next.js API Routes, Prisma ORM, PostgreSQL
+- News Fetching: RSS Parser (cheerio), Axios
+- Scheduling: node-cron
+- AI: DeepSeek API for news categorization
+- Icons: lucide-react
+- Utilities: date-fns, slugify, zod
+
+## DATABASE SCHEMA (Prisma)
+Generate models for: Article, VisaUpdate, TravelAdvisory, GovernmentUpdate, DailyFact, and TravelAlert.
+
+Generate the complete, production-ready directory setup for this project inside my opened workspace folder. Write out every single file in full, create all required sub-folders (/app, /components, /lib, /prisma), and initialize the config files. Do not use abbreviations or placeholders.

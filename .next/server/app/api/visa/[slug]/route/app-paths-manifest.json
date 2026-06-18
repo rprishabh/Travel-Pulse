@@ -1,0 +1,3 @@
+{
+  "/api/visa/[slug]/route": "app/api/visa/[slug]/route.js"
+}

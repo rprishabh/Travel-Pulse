@@ -1,0 +1,42 @@
+{
+  "name": "travel-pulse-antigravity",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev --turbo",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "newsfetch": "tsx lib/news-fetcher.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@prisma/config": "^7.8.0",
+    "@types/pg": "^8.20.0",
+    "@types/react": "19.2.17",
+    "autoprefixer": "^10.5.0",
+    "dotenv": "^17.4.2",
+    "opencode-ai": "^1.17.7",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^4.3.1",
+    "tsx": "^4.22.4",
+    "typescript": "6.0.3"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "@tailwindcss/postcss": "^4.3.1",
+    "cheerio": "^1.2.0",
+    "lucide-react": "^1.18.0",
+    "next": "^16.2.9",
+    "opencode-windows-x64": "^1.17.7",
+    "opencode-windows-x64-baseline": "^1.17.7",
+    "pg": "^8.21.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  }
+}
