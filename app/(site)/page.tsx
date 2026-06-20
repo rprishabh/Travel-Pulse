@@ -11,6 +11,7 @@ import { VisaMap } from "@/components/VisaMap";
 import { GovInitiativesRail } from "@/components/GovInitiativesRail";
 import { AdvisoriesGlobe } from "@/components/AdvisoriesGlobe";
 import { StateTourismTimeline } from "@/components/StateTourismTimeline";
+import { UpcomingFestivalAlerts } from "@/components/UpcomingFestivalAlerts";
 import { JourneyCanvas } from "@/components/JourneyCanvas";
 import { PaperPlaneCursor } from "@/components/PaperPlaneCursor";
 import { MagneticButton } from "@/components/MagneticButton";
@@ -141,6 +142,9 @@ export default function HomePage() {
           </div>
           <NewsGrid category="worldwide" limit={3} />
         </section>
+
+        {/* SECTION 7.5: UPCOMING FESTIVALS & EVENTS WORLDWIDE */}
+        <UpcomingFestivalAlerts />
 
         {/* SECTION 8: ADVISORIES GLOBE */}
         <section className="max-w-5xl mx-auto">

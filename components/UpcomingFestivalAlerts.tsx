@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { PartyPopper, MapPin, Calendar, Flame, Clock, Sparkles } from "lucide-react";
+import { motion } from "motion/react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -138,10 +139,21 @@ export function UpcomingFestivalAlerts() {
               : `${start.toLocaleDateString("en-IN", { day: "numeric", month: "short" })} – ${end.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`;
 
             return (
-              <div
+              <motion.div
                 key={event.id}
-                className="group relative rounded-2xl overflow-hidden border border-white/10 dark:border-surface-800 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-2xl hover:shadow-brand-500/10 animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="group relative rounded-2xl overflow-hidden border border-white/10 dark:border-surface-800 shadow-md hover:shadow-2xl hover:shadow-brand-500/10 transition-shadow duration-300"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.16, 1, 0.3, 1],
+                  delay: index * 0.08,
+                }}
+                whileHover={{
+                  scale: 1.03,
+                  y: -6,
+                }}
               >
                 {/* Gradient Background with Large Emoji */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
@@ -200,7 +212,7 @@ export function UpcomingFestivalAlerts() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
