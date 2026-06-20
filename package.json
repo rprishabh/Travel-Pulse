@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "next build",
+    "build": "prisma db push && prisma db seed && next build",
     "start": "next start",
     "lint": "next lint",
     "newsfetch": "tsx lib/news-fetcher.ts"
@@ -22,6 +22,7 @@
     "dotenv": "^17.4.2",
     "opencode-ai": "^1.17.7",
     "postcss": "^8.5.15",
+    "prisma": "^7.8.0",
     "tailwindcss": "^4.3.1",
     "tsx": "^4.22.4",
     "typescript": "6.0.3"
