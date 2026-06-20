@@ -1,9 +1,0 @@
-{
-  "/(site)/page": "app/(site)/page.js",
-  "/api/advisories/alerts/route": "app/api/advisories/alerts/route.js",
-  "/api/advisories/route": "app/api/advisories/route.js",
-  "/api/events/route": "app/api/events/route.js",
-  "/api/news/route": "app/api/news/route.js",
-  "/api/visa/route": "app/api/visa/route.js",
-  "/page": "app/page.js"
-}
