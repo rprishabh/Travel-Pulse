@@ -7,6 +7,237 @@ import { CompassSpinner } from "./CompassSpinner";
 // World map TopoJSON URL
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
+// Numeric ISO-3166-1 to Alpha-3 mapping dictionary
+const NUMERIC_TO_ISO_A3: Record<string, string> = {
+  "004": "AFG", // Afghanistan
+  "008": "ALB", // Albania
+  "012": "DZA", // Algeria
+  "016": "ASM", // American Samoa
+  "020": "AND", // Andorra
+  "024": "AGO", // Angola
+  "028": "ATG", // Antigua and Barbuda
+  "032": "ARG", // Argentina
+  "036": "AUS", // Australia
+  "040": "AUT", // Austria
+  "044": "BHS", // Bahamas
+  "048": "BHR", // Bahrain
+  "050": "BGD", // Bangladesh
+  "052": "BRB", // Barbados
+  "056": "BEL", // Belgium
+  "060": "BMU", // Bermuda
+  "064": "BTN", // Bhutan
+  "068": "BOL", // Bolivia
+  "070": "BIH", // Bosnia and Herzegovina
+  "072": "BWA", // Botswana
+  "076": "BRA", // Brazil
+  "084": "BLZ", // Belize
+  "090": "SLB", // Solomon Islands
+  "096": "BRN", // Brunei
+  "100": "BGR", // Bulgaria
+  "104": "MMR", // Myanmar
+  "108": "BDI", // Burundi
+  "112": "BLR", // Belarus
+  "116": "KHM", // Cambodia
+  "120": "CMR", // Cameroon
+  "124": "CAN", // Canada
+  "132": "CPV", // Cape Verde
+  "136": "CYM", // Cayman Islands
+  "140": "CAF", // Central African Republic
+  "144": "LKA", // Sri Lanka
+  "148": "TCD", // Chad
+  "152": "CHL", // Chile
+  "156": "CHN", // China
+  "170": "COL", // Colombia
+  "174": "COM", // Comoros
+  "175": "COG", // Congo
+  "180": "COD", // DR Congo
+  "188": "CRI", // Costa Rica
+  "191": "HRV", // Croatia
+  "192": "CUB", // Cuba
+  "196": "CYP", // Cyprus
+  "203": "CZE", // Czechia
+  "204": "BEN", // Benin
+  "208": "DNK", // Denmark
+  "212": "DMA", // Dominica
+  "214": "DOM", // Dominican Republic
+  "218": "ECU", // Ecuador
+  "222": "SLV", // El Salvador
+  "226": "GNQ", // Equatorial Guinea
+  "231": "ETH", // Ethiopia
+  "232": "ERI", // Eritrea
+  "233": "EST", // Estonia
+  "242": "FJI", // Fiji
+  "246": "FIN", // Finland
+  "250": "FRA", // France
+  "254": "GUF", // French Guiana
+  "258": "PYF", // French Polynesia
+  "262": "ATF", // French Southern Territories
+  "266": "GAB", // Gabon
+  "268": "GEO", // Georgia
+  "270": "GMB", // Gambia
+  "275": "PSE", // Palestine
+  "276": "DEU", // Germany
+  "288": "GHA", // Ghana
+  "292": "GIB", // Gibraltar
+  "300": "GRC", // Greece
+  "304": "GRL", // Greenland
+  "308": "GRD", // Grenada
+  "320": "GTM", // Guatemala
+  "324": "GIN", // Guinea
+  "328": "GUY", // Guyana
+  "332": "HTI", // Haiti
+  "340": "HND", // Honduras
+  "344": "HKG", // Hong Kong
+  "348": "HUN", // Hungary
+  "352": "ISL", // Iceland
+  "356": "IND", // India
+  "360": "IDN", // Indonesia
+  "364": "IRN", // Iran
+  "368": "IRQ", // Iraq
+  "372": "IRL", // Ireland
+  "376": "ISR", // Israel
+  "380": "ITA", // Italy
+  "384": "CIV", // Ivory Coast
+  "388": "JAM", // Jamaica
+  "392": "JPN", // Japan
+  "398": "KAZ", // Kazakhstan
+  "400": "JOR", // Jordan
+  "404": "KEN", // Kenya
+  "408": "PRK", // North Korea
+  "410": "KOR", // South Korea
+  "414": "KWT", // Kuwait
+  "417": "KGZ", // Kyrgyzstan
+  "418": "LAO", // Laos
+  "422": "LBN", // Lebanon
+  "426": "LSO", // Lesotho
+  "428": "LVA", // Latvia
+  "430": "LBR", // Liberia
+  "434": "LBY", // Libya
+  "438": "LIE", // Liechtenstein
+  "440": "LTU", // Lithuania
+  "442": "LUX", // Luxembourg
+  "446": "MAC", // Macao
+  "450": "MDG", // Madagascar
+  "454": "MWI", // Malawi
+  "458": "MYS", // Malaysia
+  "462": "MDV", // Maldives
+  "466": "MLI", // Mali
+  "470": "MLT", // Malta
+  "478": "MRT", // Mauritania
+  "480": "MUS", // Mauritius
+  "484": "MEX", // Mexico
+  "496": "MNG", // Mongolia
+  "498": "MDA", // Moldova
+  "499": "MNE", // Montenegro
+  "504": "MAR", // Morocco
+  "508": "MOZ", // Mozambique
+  "512": "OMN", // Oman
+  "516": "NAM", // Namibia
+  "524": "NPL", // Nepal
+  "528": "NLD", // Netherlands
+  "540": "NCL", // New Caledonia
+  "554": "NZL", // New Zealand
+  "558": "NIC", // Nicaragua
+  "562": "NER", // Niger
+  "566": "NGA", // Nigeria
+  "578": "NOR", // Norway
+  "586": "PAK", // Pakistan
+  "591": "PAN", // Panama
+  "598": "PNG", // Papua New Guinea
+  "600": "PRY", // Paraguay
+  "604": "PER", // Peru
+  "608": "PHL", // Philippines
+  "616": "POL", // Poland
+  "620": "PRT", // Portugal
+  "624": "GNB", // Guinea-Bissau
+  "626": "TLS", // Timor-Leste
+  "630": "PRI", // Puerto Rico
+  "634": "QAT", // Qatar
+  "642": "ROU", // Romania
+  "643": "RUS", // Russia
+  "646": "RWA", // Rwanda
+  "682": "SAU", // Saudi Arabia
+  "686": "SEN", // Senegal
+  "688": "SRB", // Serbia
+  "690": "SYC", // Seychelles
+  "694": "SLE", // Sierra Leone
+  "702": "SGP", // Singapore
+  "703": "SVK", // Slovakia
+  "704": "VNM", // Vietnam
+  "705": "SVN", // Slovenia
+  "706": "SOM", // Somalia
+  "710": "ZAF", // South Africa
+  "716": "ZWE", // Zimbabwe
+  "724": "ESP", // Spain
+  "728": "SSD", // South Sudan
+  "729": "SDN", // Sudan
+  "732": "ESH", // Western Sahara
+  "740": "SUR", // Suriname
+  "748": "SWZ", // Eswatini
+  "752": "SWE", // Sweden
+  "756": "CHE", // Switzerland
+  "760": "SYR", // Syria
+  "762": "TJK", // Tajikistan
+  "764": "THA", // Thailand
+  "768": "TOG", // Togo
+  "776": "TON", // Tonga
+  "780": "TTO", // Trinidad and Tobago
+  "784": "ARE", // United Arab Emirates
+  "788": "TUN", // Tunisia
+  "792": "TUR", // Turkey
+  "795": "TKM", // Turkmenistan
+  "800": "UGA", // Uganda
+  "804": "UKR", // Ukraine
+  "807": "MKD", // North Macedonia
+  "818": "EGY", // Egypt
+  "826": "GBR", // United Kingdom
+  "834": "TZA", // Tanzania
+  "840": "USA", // United States
+  "858": "URY", // Uruguay
+  "860": "UZB", // Uzbekistan
+  "862": "VEN", // Venezuela
+  "882": "WSM", // Samoa
+  "887": "YEM", // Yemen
+  "894": "ZMB", // Zambia
+};
+
+// Helper function to resolve dynamic TopoJSON properties/id to 3-letter countryCode
+function getCountryCode(geo: any, visaList: Record<string, VisaData>): string {
+  // 1. Try ISO_A3 or iso_a3 from properties
+  const isoA3 = geo.properties?.ISO_A3 || geo.properties?.iso_a3;
+  if (isoA3 && typeof isoA3 === "string" && isoA3.length === 3) {
+    return isoA3.toUpperCase();
+  }
+
+  // 2. Try numeric code mapping from geo.id
+  const idStr = String(geo.id || geo.properties?.id || "").trim();
+  if (idStr) {
+    const padded = idStr.padStart(3, "0");
+    const mapped = NUMERIC_TO_ISO_A3[padded];
+    if (mapped) return mapped;
+  }
+
+  // 3. Try name match fallback
+  const name = geo.properties?.name || geo.properties?.NAME;
+  if (name && typeof name === "string") {
+    const nameLower = name.toLowerCase().trim();
+    if (nameLower === "united states of america" || nameLower === "united states") return "USA";
+    if (nameLower === "united kingdom") return "GBR";
+    if (nameLower === "viet nam") return "VNM";
+    if (nameLower === "south korea" || nameLower === "korea") return "KOR";
+    if (nameLower === "north korea") return "PRK";
+    if (nameLower === "russia" || nameLower === "russian federation") return "RUS";
+    if (nameLower === "uae" || nameLower === "united arab emirates") return "ARE";
+
+    const matched = Object.values(visaList).find(
+      (v) => v.countryName.toLowerCase().trim() === nameLower
+    );
+    if (matched) return matched.countryCode;
+  }
+
+  return idStr;
+}
+
 interface VisaData {
   countryName: string;
   countryCode: string;
@@ -55,7 +286,7 @@ export function VisaMap() {
   }, []);
 
   const getCountryColor = (geo: any) => {
-    const code = geo.properties.ISO_A3 || geo.id;
+    const code = getCountryCode(geo, visaList);
     if (code === "IND") return "#10b981"; // India is Emerald
 
     const visa = visaList[code];
@@ -104,7 +335,7 @@ export function VisaMap() {
           <Geographies geography={geoUrl}>
             {({ geographies }: { geographies: any[] }) =>
               geographies.map((geo: any) => {
-                const code = geo.properties.ISO_A3 || geo.id;
+                const code = getCountryCode(geo, visaList);
                 const visa = visaList[code];
                 return (
                   <Geography
@@ -126,7 +357,7 @@ export function VisaMap() {
                       hover: {
                         fill: code === "IND" ? "#10b981" : "#6c5ce7",
                         outline: "none",
-                        cursor: "pointer",
+                        cursor: visa ? "pointer" : "default",
                       },
                       pressed: {
                         fill: "#0c1929",

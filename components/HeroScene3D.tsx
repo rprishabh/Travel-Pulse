@@ -148,15 +148,14 @@ export function HeroScene3D() {
     <div className="w-full h-[450px] relative select-none rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing">
       <Suspense fallback={<div className="w-full h-full flex items-center justify-center"><CompassSpinner /></div>}>
         <Canvas
-          frameloop="demand"
-          camera={{ position: [0, 0, 4.2], fov: 60 }}
+          camera={{ position: [0, 0, 5.2], fov: 60 }}
           shadows
         >
           <ambientLight intensity={1.1} />
           <directionalLight position={[5, 3, 5]} intensity={1.8} castShadow />
           <directionalLight position={[-5, -3, -5]} intensity={0.5} />
           
-          <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.3}>
+          <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.15}>
             <Earth textureUrl="/textures/earth-day.jpg" />
           </Float>
           

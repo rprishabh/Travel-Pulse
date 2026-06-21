@@ -122,6 +122,58 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
+  // Real-time AQI state
+  const [aqiData, setAqiData] = useState<{ val: number; status: string; url: string }>({
+    val: 312,
+    status: "SEVERE",
+    url: "https://aqicn.org/city/delhi/"
+  });
+
+  // ── Fetch real-time Delhi AQI ──────────────────────────────────────────
+  useEffect(() => {
+    let isMounted = true;
+    const fetchAqi = async () => {
+      try {
+        const res = await fetch("https://api.waqi.info/feed/delhi/?token=demo");
+        const json = await res.json();
+        if (json.status === "ok" && json.data && isMounted) {
+          const val = json.data.aqi;
+          const url = json.data.city?.url || "https://aqicn.org/city/delhi/";
+          
+          let status = "MODERATE";
+          if (val <= 50) status = "GOOD";
+          else if (val <= 100) status = "SATISFACTORY";
+          else if (val <= 150) status = "MODERATE";
+          else if (val <= 200) status = "POOR";
+          else if (val <= 300) status = "VERY POOR";
+          else status = "SEVERE";
+
+          setAqiData({ val, status, url });
+        }
+      } catch (err) {
+        console.error("Failed to fetch AQI:", err);
+      }
+    };
+
+    fetchAqi();
+    const interval = setInterval(fetchAqi, 600000); // 10 minutes
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const getAqiColor = (val: number) => {
+    if (val <= 50) return { text: "text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" };
+    if (val <= 100) return { text: "text-green-600 dark:text-green-400", dot: "bg-green-500" };
+    if (val <= 150) return { text: "text-amber-500 dark:text-amber-400", dot: "bg-amber-500" };
+    if (val <= 200) return { text: "text-orange-600 dark:text-orange-400", dot: "bg-orange-500" };
+    if (val <= 300) return { text: "text-red-600 dark:text-red-400", dot: "bg-red-500" };
+    return { text: "text-purple-600 dark:text-purple-400", dot: "bg-purple-500 animate-pulse" };
+  };
+
+  const aqiColors = getAqiColor(aqiData.val);
+
   // ── Scroll detection for header background ────────────────────────────
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -184,10 +236,15 @@ export function Header() {
               <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white/80 dark:from-surface-900/80 to-transparent z-10 rounded-l-full pointer-events-none" />
 
               <div className="flex whitespace-nowrap animate-marquee hover:[animation-play-state:paused] items-center text-[10px] font-bold tracking-wider">
-                <span className="flex items-center gap-1.5 text-red-600 dark:text-red-400 mx-4 shrink-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
-                  DELHI AQI: 312 (SEVERE)
-                </span>
+                <a
+                  href={aqiData.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center gap-1.5 mx-4 shrink-0 hover:underline transition-colors ${aqiColors.text}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${aqiColors.dot}`} />
+                  DELHI AQI: {aqiData.val} ({aqiData.status})
+                </a>
                 <span className="flex items-center gap-1.5 text-amber-500 dark:text-amber-400 mx-4 shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
                   TRENDING: LEH LADAKH OPEN
@@ -202,10 +259,15 @@ export function Header() {
                 </span>
 
                 {/* Perfect mirrored set to guarantee a seamless infinite scroll loop */}
-                <span className="flex items-center gap-1.5 text-red-600 dark:text-red-400 mx-4 shrink-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
-                  DELHI AQI: 312 (SEVERE)
-                </span>
+                <a
+                  href={aqiData.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center gap-1.5 mx-4 shrink-0 hover:underline transition-colors ${aqiColors.text}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${aqiColors.dot}`} />
+                  DELHI AQI: {aqiData.val} ({aqiData.status})
+                </a>
                 <span className="flex items-center gap-1.5 text-amber-500 dark:text-amber-400 mx-4 shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
                   TRENDING: LEH LADAKH OPEN
