@@ -13,7 +13,6 @@ import { AdvisoriesGlobe } from "@/components/AdvisoriesGlobe";
 import { StateTourismTimeline } from "@/components/StateTourismTimeline";
 import { UpcomingFestivalAlerts } from "@/components/UpcomingFestivalAlerts";
 import { JourneyCanvas } from "@/components/JourneyCanvas";
-import { PaperPlaneCursor } from "@/components/PaperPlaneCursor";
 import { MagneticButton } from "@/components/MagneticButton";
 import { Globe2, FileText, ArrowRight, ShieldAlert } from "lucide-react";
 
@@ -157,9 +156,6 @@ export default function HomePage() {
         </section>
 
       </main>
-
-      {/* Premium Desktop interactive Cursor Trail */}
-      <PaperPlaneCursor />
     </div>
   );
 }
