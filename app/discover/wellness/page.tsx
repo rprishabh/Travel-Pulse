@@ -69,7 +69,7 @@ const PREMIUM_RETREATS: Retreat[] = [
     therapies: ["Sowa Rigpa (Tibetan)", "Acupuncture", "Sattvic Nutrition", "Music Therapy"],
     duration: "7 - 30 Days",
     priceLevel: "Elite",
-    websiteUrl: "https://www.vfrretreats.com/",
+    websiteUrl: "https://www.sixsenses.com/en/resorts/vana",
   },
   {
     id: "r-4",

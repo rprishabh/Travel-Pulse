@@ -65,8 +65,8 @@ function getGlowClass(category: string): string {
   const cat = (category || "").toUpperCase();
   if (cat === "CUISINE") return "from-orange-500/20 via-red-500/10 to-transparent shadow-[0_0_120px_50px_rgba(249,115,22,0.18)]";
   if (cat === "HISTORY" || cat === "HERITAGE") return "from-indigo-600/20 via-purple-600/10 to-transparent shadow-[0_0_120px_50px_rgba(99,102,241,0.18)]";
-  if (cat === "WILDLIFE" || cat === "GEOGRAPHY" || cat === "ADVENTURE") return "from-emerald-500/20 via-teal-600/10 to-transparent shadow-[0_0_120px_50px_rgba(16,185,129,0.18)]";
-  return "from-amber-500/20 via-orange-600/10 to-transparent shadow-[0_0_120px_50px_rgba(245,158,11,0.18)]";
+  if (cat === "WILDLIFE" || cat === "GEOGRAPHY" || cat === "ADVENTURE" || cat === "NATURE") return "from-emerald-500/20 via-teal-600/10 to-transparent shadow-[0_0_120px_50px_rgba(16,185,129,0.18)]";
+  return "from-sunset-1/20 via-sunset-2/10 to-transparent shadow-[0_0_120px_50px_rgba(245,158,11,0.18)]";
 }
 
 // Custom Vector Entry Passport Stamp
@@ -105,16 +105,21 @@ export function TodayFactCard() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [dateLabel, setDateLabel] = useState("");
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const today = new Date();
-    // Wednesday, June 23, 2026 format mapping
     const formatted = today.toLocaleDateString("en-IN", { day: "numeric", month: "long" });
     setDateLabel(formatted);
 
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const localDateStr = `${year}-${month}-${day}`;
+
     async function fetchDailyFact() {
       try {
-        const res = await fetch("/api/travel/daily-fact");
+        const res = await fetch(`/api/travel/daily-fact?date=${localDateStr}`);
         const json = await res.json();
         if (json.success && json.data) {
           setFact(json.data);
@@ -127,6 +132,27 @@ export function TodayFactCard() {
     }
     fetchDailyFact();
   }, []);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Normalize coordinates to range [-0.5, 0.5]
+    const xc = x / rect.width - 0.5;
+    const yc = y / rect.height - 0.5;
+    
+    setTilt({
+      x: -yc * 12, // Tilt on X axis
+      y: xc * 12   // Tilt on Y axis
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setTilt({ x: 0, y: 0 });
+  };
 
   if (isLoading) {
     return (
@@ -147,23 +173,27 @@ export function TodayFactCard() {
   const storyNo = fact.id.substring(fact.id.length - 4).toUpperCase();
 
   return (
-    <div className="w-full max-w-[390px] mx-auto aspect-[9/16] relative perspective select-none">
+    <div 
+      className="w-full max-w-[390px] mx-auto aspect-[9/16] relative select-none"
+      style={{ perspective: "1500px" }}
+    >
       <motion.div
-        className="w-full h-full relative"
+        className="w-full h-full relative cursor-pointer"
         style={{ transformStyle: "preserve-3d" }}
+        onClick={() => setIsFlipped(!isFlipped)}
+        onMouseMove={handleMouseMove}
         onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseLeave={handleMouseLeave}
         animate={{
-          rotateY: isFlipped 
-            ? (isHovered ? [180, 183, 177, 183, 180] : 180) 
-            : (isHovered ? [0, 3, -3, 3, 0] : 0),
-          rotateX: isHovered ? [0, -2, 2, -2, 0] : 0,
-          y: isHovered ? -6 : 0,
+          rotateY: isFlipped ? 180 + tilt.y : tilt.y,
+          rotateX: tilt.x,
+          y: isHovered ? -8 : 0,
         }}
         transition={{
-          rotateY: isHovered ? { repeat: Infinity, duration: 6, ease: "easeInOut" } : { duration: 0.6, ease: "easeOut" },
-          rotateX: isHovered ? { repeat: Infinity, duration: 5, ease: "easeInOut" } : { duration: 0.6, ease: "easeOut" },
-          y: { duration: 0.3 }
+          type: "spring",
+          stiffness: 300,
+          damping: 20,
+          mass: 0.5
         }}
       >
         
@@ -172,7 +202,9 @@ export function TodayFactCard() {
           className="absolute inset-0 w-full h-full rounded-[2.5rem] overflow-hidden border-[10px] border-double border-white/10 shadow-glass-xl flex flex-col justify-between p-7 text-white"
           style={{ 
             backfaceVisibility: "hidden",
-            background: "radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 0.45) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(9, 9, 11, 1) 100%)"
+            WebkitBackfaceVisibility: "hidden",
+            background: "radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 0.45) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(9, 9, 11, 1) 100%)",
+            transform: "rotateY(0deg)" // Fixes Webkit 3D context
           }}
         >
           {/* Overlay low-opacity Unsplash travel photo textured in a gradient mesh way */}
@@ -255,6 +287,7 @@ export function TodayFactCard() {
           className="absolute inset-0 w-full h-full rounded-[2.5rem] p-7 border-[10px] border-double border-white/10 shadow-glass-xl flex flex-col justify-between text-white"
           style={{
             backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
             background: "radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 0.45) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(9, 9, 11, 1) 100%)"
           }}

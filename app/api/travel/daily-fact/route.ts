@@ -113,18 +113,38 @@ const OBSCURE_FACT_POOL = [
   }
 ];
 
-export async function GET() {
+// In-memory cache for daily facts to prevent redundant database hits
+const memoryCache = new Map<string, any>();
+
+export async function GET(request: Request) {
   try {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const date = today.getDate();
+    const { searchParams } = new URL(request.url);
+    const dateParam = searchParams.get("date"); // Expected format: YYYY-MM-DD
 
-    // Standard date string comparison
-    const isoDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-    const targetDate = new Date(isoDateStr);
+    let dateKey = "";
+    let targetDate: Date;
 
-    // 1. Try to fetch from persistent cache (database)
+    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+      dateKey = dateParam;
+      targetDate = new Date(dateParam);
+    } else {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth();
+      const date = today.getDate();
+      dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+      targetDate = new Date(dateKey);
+    }
+
+    // 1. Check in-memory cache first
+    if (memoryCache.has(dateKey)) {
+      return NextResponse.json({
+        success: true,
+        data: memoryCache.get(dateKey),
+      });
+    }
+
+    // 2. Try to fetch from persistent cache (database)
     let fact = await prisma.dailyFact.findFirst({
       where: {
         factDate: {
@@ -134,11 +154,11 @@ export async function GET() {
       },
     });
 
-    // 2. If not found in DB, select one deterministically from the pool and insert it
+    // 3. If not found in DB, select one deterministically from the pool and insert it
     if (!fact) {
       // Calculate day of year to ensure daily rotation
-      const startOfYear = new Date(today.getFullYear(), 0, 0);
-      const diff = today.getTime() - startOfYear.getTime();
+      const startOfYear = new Date(targetDate.getFullYear(), 0, 0);
+      const diff = targetDate.getTime() - startOfYear.getTime();
       const oneDay = 1000 * 60 * 60 * 24;
       const dayOfYear = Math.floor(diff / oneDay);
 
@@ -177,25 +197,31 @@ export async function GET() {
       } catch (dbErr) {
         console.error("Failed to write daily fact cache to DB, returning in-memory:", dbErr);
         // Fallback: construct ephemeral response if DB write fails
+        const ephemeralFact = {
+          id: `temp-${dayOfYear}`,
+          factDate: targetDate.toISOString(),
+          title: selectedItem.title,
+          fact: selectedItem.fact,
+          detailedFact: selectedItem.detailedFact,
+          category: selectedItem.category,
+          region: selectedItem.region,
+          state: selectedItem.state,
+          funEmoji: selectedItem.funEmoji,
+          sourceUrl: selectedItem.sourceUrl,
+          tone: "CASUAL_ENGAGING",
+          isPublished: true,
+        };
+        // Cache ephemeral response too
+        memoryCache.set(dateKey, ephemeralFact);
         return NextResponse.json({
           success: true,
-          data: {
-            id: `temp-${dayOfYear}`,
-            factDate: targetDate.toISOString(),
-            title: selectedItem.title,
-            fact: selectedItem.fact,
-            detailedFact: selectedItem.detailedFact,
-            category: selectedItem.category,
-            region: selectedItem.region,
-            state: selectedItem.state,
-            funEmoji: selectedItem.funEmoji,
-            sourceUrl: selectedItem.sourceUrl,
-            tone: "CASUAL_ENGAGING",
-            isPublished: true,
-          },
+          data: ephemeralFact,
         });
       }
     }
+
+    // Cache the resolved DB record in memory
+    memoryCache.set(dateKey, fact);
 
     return NextResponse.json({
       success: true,
