@@ -27,6 +27,9 @@ export function MagneticButton({
   const springY = useSpring(y, springConfig);
 
   useEffect(() => {
+    const supportsHover = window.matchMedia("(hover: hover)").matches;
+    if (!supportsHover) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       if (!ref.current) return;
 
@@ -43,7 +46,6 @@ export function MagneticButton({
 
       if (distance < radius && !isReduced) {
         setIsHovered(true);
-        // Attract toward cursor with 45% pull strength
         x.set(distX * 0.45);
         y.set(distY * 0.45);
       } else {
@@ -62,9 +64,9 @@ export function MagneticButton({
   return (
     <div ref={ref} className="inline-block">
       <motion.div
-        style={{ x: springX, y: springY }}
+        style={{ x: springX, y: springY, touchAction: "manipulation" }}
         onClick={onClick}
-        className={`${className} cursor-pointer select-none`}
+        className={`${className} cursor-pointer`}
         whileTap={{ scale: 0.95 }}
       >
         {children}

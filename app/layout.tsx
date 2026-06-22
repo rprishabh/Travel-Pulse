@@ -160,7 +160,7 @@ export default function RootLayout({
         <JsonLd />
         <script dangerouslySetInnerHTML={{ __html: DARK_MODE_SCRIPT }} />
       </head>
-      <body className="min-h-screen flex flex-col relative select-none">
+      <body className="min-h-screen flex flex-col relative">
         {/* Grain overlay for paper tactile feel */}
         <div className="grain-overlay" />
 

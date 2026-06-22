@@ -135,18 +135,21 @@ export function FloatingSuitcase() {
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      // Small parallax offset (-0.3 to 0.3)
       const px = (e.clientX / window.innerWidth - 0.5) * 0.6;
       const py = -(e.clientY / window.innerHeight - 0.5) * 0.6;
       setMousePos({ x: px, y: py });
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("mousemove", handleMouseMove);
+    if (window.matchMedia("(hover: hover)").matches) {
+      window.addEventListener("mousemove", handleMouseMove);
+    }
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("mousemove", handleMouseMove);
+      if (window.matchMedia("(hover: hover)").matches) {
+        window.removeEventListener("mousemove", handleMouseMove);
+      }
     };
   }, []);
 
@@ -155,7 +158,7 @@ export function FloatingSuitcase() {
   return (
     <div className="fixed inset-y-0 right-8 w-60 h-screen pointer-events-none z-40 hidden lg:block select-none">
       <Suspense fallback={null}>
-        <Canvas camera={{ position: [0, 0, 3], fov: 45 }}>
+        <Canvas camera={{ position: [0, 0, 3], fov: 45 }} style={{ pointerEvents: "none" }}>
           <ambientLight intensity={0.7} />
           <directionalLight position={[2, 3, 4]} intensity={1.5} />
           <directionalLight position={[-2, -3, -1]} intensity={0.3} />
