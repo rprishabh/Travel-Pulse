@@ -1,4 +1,4 @@
-# Journey Pulse — Cinematic 3D Travel Intelligence
+# Journey-Pulse — Cinematic 3D Travel Intelligence
 
 A premium, interactive, 3D scroll-driven travel aggregator and visa compliance tracker built on Next.js 14 App Router, Tailwind CSS, Prisma, and Supabase.
 

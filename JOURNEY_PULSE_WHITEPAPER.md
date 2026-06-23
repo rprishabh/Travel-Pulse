@@ -1,6 +1,6 @@
-# Journey Pulse — Architectural Whitepaper & Master Document
+# Journey-Pulse — Architectural Whitepaper & Master Document
 
-Journey Pulse is a premium, interactive, 3D travel intelligence portal and visa compliance tracker. Built specifically for modern travelers, it aggregates real-time regulatory news, visa requirements, travel advisories, regional updates, and cultural insights into a high-fidelity visual experience.
+Journey-Pulse is a premium, interactive, 3D travel intelligence portal and visa compliance tracker. Built specifically for modern travelers, it aggregates real-time regulatory news, visa requirements, travel advisories, regional updates, and cultural insights into a high-fidelity visual experience.
 
 This document serves as the master whitepaper outlining the **Core Vision**, **Technical Architecture**, **Data Pipelines**, **Visual & Interaction Engineering**, and **Development Guidelines** for the platform.
 
@@ -20,7 +20,7 @@ By combining real-time RSS scraper pipelines, a robust database caching layer, a
 
 ## 2. Platform Architecture Overview
 
-Journey Pulse is built as a unified, modern web application using a decoupled component structure with dynamic server-side API endpoints:
+Journey-Pulse is built as a unified, modern web application using a decoupled component structure with dynamic server-side API endpoints:
 
 ```mermaid
 graph TD
@@ -67,7 +67,7 @@ Provides Indian passport holders with an instant lookup directory of visa requir
 
 ## 4. Visual & Interaction Engineering
 
-Journey Pulse delivers its cinematic aesthetic using a carefully choreographed motion system:
+Journey-Pulse delivers its cinematic aesthetic using a carefully choreographed motion system:
 
 ```mermaid
 graph TD
@@ -110,7 +110,7 @@ graph TD
 
 ## 6. Database Schema Design
 
-Journey Pulse organizes its database to balance heavy news feeds with critical regulatory checks:
+Journey-Pulse organizes its database to balance heavy news feeds with critical regulatory checks:
 
 - **Article**: Aggregates news from 20+ RSS/scraper sources, including metadata such as read times, sentiment analysis scores, and SEO tags.
 - **NewsSource**: Manages scraping metadata, fetch health statistics, and website URLs.
@@ -123,12 +123,12 @@ Journey Pulse organizes its database to balance heavy news feeds with critical r
 
 ## 7. Installation & Local Development Setup
 
-To run Journey Pulse locally, follow these instructions:
+To run Journey-Pulse locally, follow these instructions:
 
 ### 1. Clone & Install Dependencies
 ```bash
-git clone https://github.com/rprishabh/Travel-Pulse.git
-cd Travel-Pulse
+git clone https://github.com/rprishabh/Journey-Pulse.git
+cd Journey-Pulse
 npm install
 ```
 
